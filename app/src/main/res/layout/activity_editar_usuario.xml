@@ -92,7 +92,7 @@
         android:textStyle="bold"
         app:cornerRadius="8dp"
         app:layout_constraintEnd_toStartOf="@+id/btn_eliminar"
-        app:layout_setHorizontal_chainStyle="packed"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtapellidomod"
         app:layout_constraintWidth_percent="0.4" />
