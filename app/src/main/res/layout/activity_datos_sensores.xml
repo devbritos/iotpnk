@@ -78,38 +78,50 @@
 
         <!-- Ampolleta (Emoji) -->
         <TextView
+            android:id="@+id/tvAmpolleta"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_margin="16dp"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center"
             android:text="💡"
             android:textSize="60sp" />
 
         <!-- Linterna (Emoji) -->
         <TextView
+            android:id="@+id/tvLinterna"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_margin="16dp"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center"
             android:text="🔦"
             android:textSize="60sp" />
 
-        <!-- Ampolleta Apagada (Emoji gris o similar si existe, o solo el mismo) -->
+        <!-- Ampolleta Apagada -->
         <TextView
+            android:id="@+id/tvAmpolletaApagada"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_margin="16dp"
             android:alpha="0.3"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center"
             android:text="💡"
             android:textSize="60sp" />
 
-        <!-- Linterna Apagada (Emoji gris) -->
+        <!-- Linterna Apagada -->
         <TextView
+            android:id="@+id/tvLinternaApagada"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_margin="16dp"
             android:alpha="0.3"
+            android:clickable="true"
+            android:focusable="true"
             android:gravity="center"
             android:text="🔦"
             android:textSize="60sp" />
