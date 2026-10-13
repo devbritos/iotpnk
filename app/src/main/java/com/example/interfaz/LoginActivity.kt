@@ -39,7 +39,7 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Bloquear botón durante envío (Rubrica)
+            // Bloquear botón durante envío
             btnIngresar.isEnabled = false
 
             realizarLogin(email, clave, btnIngresar)

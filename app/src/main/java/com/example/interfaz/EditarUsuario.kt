@@ -8,9 +8,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
 
 class EditarUsuario : AppCompatActivity() {
     private lateinit var id: EditText
@@ -52,7 +49,7 @@ class EditarUsuario : AppCompatActivity() {
         nom.setText(name)
         ape.setText(lastname)
 
-        // Botón Modificar usuario en la base de datos
+        // Botón Modificar usuario en SQLite local + Sincronización MySQL
         mod.setOnClickListener {
             val currentId = id.text.toString().trim()
             val newName = nom.text.toString().trim()
@@ -63,69 +60,41 @@ class EditarUsuario : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            modificarEnServidor(currentId, newName, newLastname)
+            val userId = currentId.toIntOrNull() ?: 0
+            if (userId > 0) {
+                // 1. Guardar modificación localmente en SQLite
+                UserRepository.updateUserLocal(this, userId, newName, newLastname)
+                Toast.makeText(this, "Usuario modificado localmente", Toast.LENGTH_SHORT).show()
+
+                // 2. Intentar sincronización en segundo plano con servidor MySQL
+                if (UserRepository.isNetworkAvailable(this)) {
+                    UserRepository.syncWithServer(this) { _, _ -> }
+                }
+            }
+
+            onBackPressedDispatcher.onBackPressed()
         }
 
-        // Botón Eliminar usuario de la base de datos
+        // Botón Eliminar usuario en SQLite local + Sincronización MySQL
         elim.setOnClickListener {
             val currentId = id.text.toString().trim()
+            val userId = currentId.toIntOrNull() ?: 0
 
-            if (currentId.isEmpty()) {
+            if (userId <= 0) {
                 Toast.makeText(this, "ID de usuario inválido", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            eliminarEnServidor(currentId)
+            // 1. Eliminar/Marcar localmente en SQLite
+            UserRepository.deleteUserLocal(this, userId)
+            Toast.makeText(this, "Usuario eliminado localmente", Toast.LENGTH_SHORT).show()
+
+            // 2. Intentar sincronización en segundo plano con servidor MySQL
+            if (UserRepository.isNetworkAvailable(this)) {
+                UserRepository.syncWithServer(this) { _, _ -> }
+            }
+
+            onBackPressedDispatcher.onBackPressed()
         }
-    }
-
-    private fun modificarEnServidor(idUsuario: String, name: String, lastname: String) {
-        val url = "http://34.202.221.246/modificar_usuario.php"
-
-        val request = object : StringRequest(
-            Method.POST, url,
-            Response.Listener {
-                Toast.makeText(this, "Usuario modificado exitosamente", Toast.LENGTH_SHORT).show()
-                onBackPressedDispatcher.onBackPressed()
-            },
-            Response.ErrorListener { error ->
-                error.printStackTrace()
-                Toast.makeText(this, "Error al modificar usuario en el servidor", Toast.LENGTH_SHORT).show()
-            }
-        ) {
-            override fun getParams(): MutableMap<String, String> {
-                val params = HashMap<String, String>()
-                params["id"] = idUsuario
-                params["name"] = name
-                params["lastname"] = lastname
-                return params
-            }
-        }
-
-        Volley.newRequestQueue(this).add(request)
-    }
-
-    private fun eliminarEnServidor(idUsuario: String) {
-        val url = "http://34.202.221.246/eliminar_usuario.php"
-
-        val request = object : StringRequest(
-            Method.POST, url,
-            Response.Listener {
-                Toast.makeText(this, "Usuario eliminado exitosamente", Toast.LENGTH_SHORT).show()
-                onBackPressedDispatcher.onBackPressed()
-            },
-            Response.ErrorListener { error ->
-                error.printStackTrace()
-                Toast.makeText(this, "Error al eliminar usuario en el servidor", Toast.LENGTH_SHORT).show()
-            }
-        ) {
-            override fun getParams(): MutableMap<String, String> {
-                val params = HashMap<String, String>()
-                params["id"] = idUsuario
-                return params
-            }
-        }
-
-        Volley.newRequestQueue(this).add(request)
     }
 }

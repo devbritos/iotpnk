@@ -7,17 +7,6 @@ import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import cn.pedant.SweetAlert.SweetAlertDialog
-import com.android.volley.Request
-import com.android.volley.toolbox.JsonArrayRequest
-import com.android.volley.toolbox.Volley
-import org.json.JSONException
-
-data class UsuarioItem(
-    val id: Int,
-    val name: String,
-    val lastname: String,
-    val email: String
-)
 
 class ListarUsuariosActivity : AppCompatActivity() {
 
@@ -58,67 +47,66 @@ class ListarUsuariosActivity : AppCompatActivity() {
                         startActivity(intent)
                     }
                     .setCancelClickListener { sDialog ->
-                        sDialog.setTitleText("Eliminar")
-                            .setContentText("¿Desea eliminar a ${user.email}?")
-                            .setConfirmText("OK")
-                            .showCancelButton(false)
-                            .setConfirmClickListener { it.dismissWithAnimation() }
-                            .changeAlertType(SweetAlertDialog.SUCCESS_TYPE)
+                        sDialog.dismissWithAnimation()
+                        // Eliminar localmente en SQLite
+                        UserRepository.deleteUserLocal(this, user.id)
+                        Toast.makeText(this, "Usuario eliminado localmente", Toast.LENGTH_SHORT).show()
+                        cargarUsuariosLocales()
+
+                        // Sincronizar en segundo plano con MySQL si hay conexión
+                        if (UserRepository.isNetworkAvailable(this)) {
+                            UserRepository.syncWithServer(this) { _, _ ->
+                                cargarUsuariosLocales()
+                            }
+                        }
                     }
                     .show()
             }
         }
 
-        // Cargar usuarios desde MySQL en el servidor vía Volley
-        obtenerUsuariosServidor()
+        // Cargar datos desde la base de datos local SQLite (100% Offline-First)
+        cargarUsuariosLocales()
+
+        // Sincronizar automáticamente en segundo plano si hay red disponible
+        sincronizarServidor()
     }
 
     override fun onResume() {
         super.onResume()
-        // Recargar la lista cuando se regresa de EditarUsuario
-        obtenerUsuariosServidor()
+        // Cargar lista local inmediatamente
+        cargarUsuariosLocales()
+        // Intentar sincronización automática con MySQL
+        sincronizarServidor()
     }
 
-    private fun obtenerUsuariosServidor() {
-        val url = "http://34.202.221.246/obtener_usuarios.php"
+    private fun cargarUsuariosLocales() {
+        userList.clear()
+        displayList.clear()
 
-        val request = JsonArrayRequest(
-            Request.Method.GET, url, null,
-            { response ->
-                displayList.clear()
-                userList.clear()
+        val usuariosLocales = UserRepository.getUsersLocal(this)
+        userList.addAll(usuariosLocales)
 
-                try {
-                    for (i in 0 until response.length()) {
-                        val obj = response.getJSONObject(i)
+        val pending = UserRepository.getPendingCount(this)
+        val isOnline = UserRepository.isNetworkAvailable(this)
 
-                        val idStr = when {
-                            obj.has("user_id") -> obj.optString("user_id")
-                            obj.has("id") -> obj.optString("id")
-                            obj.has("id_usuario") -> obj.optString("id_usuario")
-                            obj.has("ID") -> obj.optString("ID")
-                            else -> "0"
-                        }
-                        val id = idStr.toIntOrNull() ?: obj.optInt("id", obj.optInt("user_id", 0))
+        for (u in userList) {
+            displayList.add("ID: ${u.id} - ${u.name} ${u.lastname} (${u.email}) [${u.status}]".trim())
+        }
+        adapter.notifyDataSetChanged()
 
-                        val nombre = obj.optString("name", "")
-                        val apellido = obj.optString("lastname", "")
-                        val email = obj.optString("email", "")
+        // Mostrar estado de sincronización y red en el título
+        val estadoRed = if (isOnline) "En línea" else "Sin conexión"
+        val estadoSync = if (pending > 0) " | $pending pendientes de sincronizar" else " | Todo sincronizado"
+        title = "Usuarios ($estadoRed$estadoSync)"
+    }
 
-                        userList.add(UsuarioItem(id, nombre, apellido, email))
-                        displayList.add("ID: $id - $nombre $apellido ($email)".trim())
-                    }
-                    adapter.notifyDataSetChanged()
-                } catch (e: JSONException) {
-                    e.printStackTrace()
-                    Toast.makeText(this, "Error procesando datos del servidor", Toast.LENGTH_SHORT).show()
+    private fun sincronizarServidor() {
+        if (UserRepository.isNetworkAvailable(this)) {
+            UserRepository.syncWithServer(this) { success, _ ->
+                if (success) {
+                    cargarUsuariosLocales()
                 }
-            },
-            { error ->
-                error.printStackTrace()
-                Toast.makeText(this, "Error de red al consultar el servidor", Toast.LENGTH_SHORT).show()
             }
-        )
-        Volley.newRequestQueue(this).add(request)
+        }
     }
 }
