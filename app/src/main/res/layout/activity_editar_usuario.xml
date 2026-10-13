@@ -92,7 +92,7 @@
         android:textStyle="bold"
         app:cornerRadius="8dp"
         app:layout_constraintEnd_toStartOf="@+id/btn_eliminar"
-        app:layout_setHorizontal_chainStyle="packed"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtapellidomod"
         app:layout_constraintWidth_percent="0.4" />
@@ -102,16 +102,16 @@
         android:layout_width="0dp"
         android:layout_height="55dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="32dp"
         android:backgroundTint="#D32F2F"
         android:text="ELIMINAR"
         android:textColor="@color/white"
         android:textSize="16sp"
         android:textStyle="bold"
         app:cornerRadius="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/btn_modificar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btn_modificar"
-        app:layout_constraintTop_toBottomOf="@+id/txtapellidomod"
+        app:layout_constraintTop_toTopOf="@+id/btn_modificar"
         app:layout_constraintWidth_percent="0.4" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
