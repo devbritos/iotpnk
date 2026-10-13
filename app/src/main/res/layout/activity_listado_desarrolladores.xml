@@ -80,10 +80,11 @@
                         android:text="Ingeniería en Informática - Sección 001D" />
 
                     <TextView
+                        android:id="@+id/tvGithubAlan"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="GitHub | LinkedIn | Portafolio"
+                        android:text="GitHub: https://github.com/devbritos"
                         android:textColor="@color/rojo_penka"
                         android:textStyle="bold" />
 
@@ -135,10 +136,11 @@
                         android:text="Ingeniería en Informática - Sección 001D" />
 
                     <TextView
+                        android:id="@+id/tvGithubLucas"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="GitHub | LinkedIn | Portafolio"
+                        android:text="GitHub: https://github.com/udbdl"
                         android:textColor="@color/rojo_penka"
                         android:textStyle="bold" />
 

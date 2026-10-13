@@ -33,10 +33,14 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Bloquear botón durante envío (Rubrica)
+            // Bloquear botón durante envío
             btnIngresar.isEnabled = false
-            
-            // Validación simplificada según requerimiento (solo formato @)
+
+            // Guardar sesión activa en SharedPreferences
+            val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+            prefs.edit().putBoolean("is_logged_in", true).apply()
+
+            // Validación exitosa
             SweetAlertDialog(this, SweetAlertDialog.SUCCESS_TYPE)
                 .setTitleText("¡Éxito!")
                 .setContentText("Bienvenido")

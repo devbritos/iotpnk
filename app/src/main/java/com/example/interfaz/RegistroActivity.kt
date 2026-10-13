@@ -5,10 +5,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
 
 class RegistroActivity : AppCompatActivity() {
 
@@ -35,65 +31,21 @@ class RegistroActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-
-
             if (pass != rpass) {
                 Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // Registrar usuario en MySQL vía servidor PHP
-            registrarEnServidor(name, lastname, email, pass)
-        }
-    }
+            // 1. Guardar localmente en SQLite (100% Offline-First)
+            UserRepository.addUserLocal(this, name, lastname, email, pass)
+            Toast.makeText(this, "Usuario registrado localmente", Toast.LENGTH_SHORT).show()
 
-    private fun registrarEnServidor(name: String, lastname: String, email: String, pass: String) {
-        val url = "http://34.202.221.246/registrar_usuario.php"
-
-        val request = object : StringRequest(
-            Method.POST, url,
-            Response.Listener { response ->
-                try {
-                    val json = org.json.JSONObject(response)
-                    val status = json.optString("status")
-                    val message = json.optString("message")
-
-                    if (status == "success") {
-                        Toast.makeText(this, "¡Usuario registrado exitosamente en MySQL!", Toast.LENGTH_SHORT).show()
-                        finish()
-                    } else {
-                        Toast.makeText(this, "Error servidor: $message", Toast.LENGTH_LONG).show()
-                    }
-                } catch (e: org.json.JSONException) {
-                    Toast.makeText(this, "Respuesta servidor: $response", Toast.LENGTH_LONG).show()
-                }
-            },
-            Response.ErrorListener { error ->
-                error.printStackTrace()
-                val statusCode = error.networkResponse?.statusCode
-                val responseData = error.networkResponse?.data?.let { String(it) } 
-                    ?: error.localizedMessage 
-                    ?: error.toString()
-                Toast.makeText(this, "Error (${statusCode ?: "Red"}): $responseData", Toast.LENGTH_LONG).show()
+            // 2. Intentar sincronización en segundo plano con MySQL si hay internet
+            if (UserRepository.isNetworkAvailable(this)) {
+                UserRepository.syncWithServer(this) { _, _ -> }
             }
-        ) {
-            override fun getParams(): MutableMap<String, String> {
-                val params = HashMap<String, String>()
-                params["name"] = name
-                params["lastname"] = lastname
-                params["email"] = email
-                params["password"] = pass
-                return params
-            }
+
+            finish()
         }
-
-        // Incrementar el tiempo de espera de Volley a 10 segundos
-        request.retryPolicy = com.android.volley.DefaultRetryPolicy(
-            10000,
-            com.android.volley.DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-            com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
-        )
-
-        Volley.newRequestQueue(this).add(request)
     }
 }
